@@ -1,5 +1,7 @@
 <h1 align="center">QUI</h1>
 
+<p align="center"><a href="./README.zh-CN.md">简体中文</a></p>
+
 <p align="center">An unofficial, community-maintained desktop build based on <a href="https://github.com/pingdotgg/t3code">T3 Code</a>.</p>
 
 > **Trademark & Unofficial Fork Notice**
