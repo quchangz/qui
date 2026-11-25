@@ -17,9 +17,10 @@ import * as Option from "effect/Option";
 
 import * as AntigravityInstallation from "./AntigravityInstallation.ts";
 
-const DEFAULT_PTY_TIMEOUT_MS = 20_000;
-const PROMPT_FALLBACK_SEND_MS = 3_500;
-const COMMAND_INPUT_SETTLE_MS = 350;
+const DEFAULT_PTY_TIMEOUT_MS = 45_000;
+const PROMPT_FALLBACK_SEND_MS = 8_000;
+const COMMAND_INPUT_SETTLE_MS = 400;
+const COMMAND_RETRY_ENTER_MS = 5_000;
 const OUTPUT_SETTLE_MS = 450;
 
 const requireForNodePty = NodeModule.createRequire(import.meta.url);
@@ -252,6 +253,7 @@ function captureAntigravityCliUsageRaw(input: {
     let term: import("node-pty").IPty | undefined;
     let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
     let submitTimer: ReturnType<typeof setTimeout> | undefined;
+    let retryEnterTimer: ReturnType<typeof setTimeout> | undefined;
     let settleTimer: ReturnType<typeof setTimeout> | undefined;
 
     const cleanup = () => {
@@ -262,6 +264,10 @@ function captureAntigravityCliUsageRaw(input: {
       if (submitTimer) {
         clearTimeout(submitTimer);
         submitTimer = undefined;
+      }
+      if (retryEnterTimer) {
+        clearTimeout(retryEnterTimer);
+        retryEnterTimer = undefined;
       }
       if (settleTimer) {
         clearTimeout(settleTimer);
@@ -308,7 +314,16 @@ function captureAntigravityCliUsageRaw(input: {
       if (settled) return;
       // ConPTY may deliver a single combined write as paste input, swallowing the Enter key.
       // @effect-diagnostics-next-line globalTimers:off
-      submitTimer = setTimeout(() => write("\r"), COMMAND_INPUT_SETTLE_MS);
+      submitTimer = setTimeout(() => {
+        write("\r");
+        if (settled) return;
+        // @effect-diagnostics-next-line globalTimers:off
+        retryEnterTimer = setTimeout(() => {
+          if (!settled && !hasCompleteUsageOutput(stripAntigravityCliAnsi(raw))) {
+            write("\r");
+          }
+        }, COMMAND_RETRY_ENTER_MS);
+      }, COMMAND_INPUT_SETTLE_MS);
     };
 
     try {
@@ -447,9 +462,16 @@ export function probeAntigravityCliUsageLimits(
         message: "Antigravity CLI binary was not found.",
       });
     }
-    return yield* runAntigravityCliUsagePty({
+    const result = yield* runAntigravityCliUsagePty({
       binaryPath: executable.executablePath,
       environment,
     });
+    if (result.unavailable) {
+      yield* Effect.logWarning("Antigravity CLI /usage probe failed", {
+        reason: result.unavailable.reason,
+        message: result.unavailable.message ?? "unknown",
+      });
+    }
+    return result;
   });
 }
