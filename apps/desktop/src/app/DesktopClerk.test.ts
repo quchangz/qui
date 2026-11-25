@@ -123,25 +123,25 @@ describe("DesktopClerk", () => {
       name: "packaged macOS",
       isDevelopment: false,
       platform: "darwin" as const,
-      userData: "/tmp/app-data/t3code-v2",
+      userData: "/tmp/app-data/QUI",
     },
     {
       name: "packaged Linux",
       isDevelopment: false,
       platform: "linux" as const,
-      userData: "/tmp/app-data/t3code-v2",
+      userData: "/tmp/app-data/QUI",
     },
     {
       name: "packaged Windows",
       isDevelopment: false,
       platform: "win32" as const,
-      userData: "/tmp/app-data/t3code-v2",
+      userData: "/tmp/app-data/QUI",
     },
     {
       name: "development",
       isDevelopment: true,
       platform: "win32" as const,
-      userData: "/tmp/app-data/t3code-dev",
+      userData: "/tmp/app-data/QUI-dev",
     },
   ])(
     "creates the bridge before startup can yield to the event loop ($name)",
@@ -169,7 +169,7 @@ describe("DesktopClerk", () => {
         "createClerkBridge",
       ]);
       assert.deepEqual(storageMock.mock.calls, [
-        [{ path: NodePath.join(NodePath.resolve(clerkStateDir), "clerk") }],
+        [{ path: NodePath.posix.resolve(clerkStateDir, "clerk") }],
       ]);
       assert.strictEqual(createClerkBridgeMock.mock.calls[0]?.[0]?.storage, storageAdapter);
     },
@@ -181,7 +181,7 @@ describe("DesktopClerk", () => {
 
     return Effect.sync(() => {
       assert.deepEqual(storageMock.mock.calls, [
-        [{ path: NodePath.resolve("relative-state", "clerk") }],
+        [{ path: NodePath.posix.resolve("relative-state", "clerk") }],
       ]);
     }).pipe(
       Effect.provide(
@@ -300,7 +300,7 @@ describe("DesktopClerk", () => {
 
         assert.isTrue(Exit.hasInterrupts(exit));
         assert.deepEqual(events, [
-          "setPath:userData:/tmp/app-data/t3code-v2",
+          "setPath:userData:/tmp/app-data/QUI",
           "requestSingleInstanceLock",
           "quit",
         ]);

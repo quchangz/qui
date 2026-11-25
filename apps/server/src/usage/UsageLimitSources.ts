@@ -108,7 +108,7 @@ function keepLastGoodReadings(
           (candidate) =>
             candidate.id === account.id &&
             candidate.driver === account.driver &&
-            // Fingerprinted Antigravity readings omit the listed identity, so they are never lent.
+            // Fingerprinted readings cannot be matched using the listed login alone.
             candidate.usageLimits.credentialFingerprint === undefined &&
             candidate.email === account.email &&
             candidate.workspaceId === account.workspaceId,

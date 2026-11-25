@@ -321,6 +321,7 @@ it.layer(layerTest)("AntigravityDriver", (it) => {
         const snapshot = yield* h.instance.snapshot.getSnapshot;
         expect(snapshot.status).toBe("ready");
         expect(snapshot.auth.status).toBe("authenticated");
+        expect(snapshot.usageLimits).toBeUndefined();
         expect(snapshot.models.map((model) => model.slug)).toEqual([
           "gemini-test-low",
           "gemini-test-high",

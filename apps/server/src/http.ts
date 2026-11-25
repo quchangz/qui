@@ -69,6 +69,11 @@ import {
   MCP_HTTP_PATH,
 } from "./httpCors.ts";
 import { requestUrl } from "./requestUrl.ts";
+import {
+  handleLocalPluginRequest,
+  layerLocalPluginPostRoute,
+  LOCAL_PLUGIN_PREFIX,
+} from "./localPlugins.ts";
 
 const OTLP_TRACES_PROXY_PATH = "/api/observability/v1/traces";
 const LOOPBACK_HOSTNAMES = new Set(["127.0.0.1", "::1", "localhost"]);
@@ -701,6 +706,10 @@ const handleStaticAndDevRequest = Effect.fn("handleStaticAndDevRequest")(
       return HttpServerResponse.text("Bad Request", { status: 400 });
     }
 
+    if (url.value.pathname.startsWith(LOCAL_PLUGIN_PREFIX)) {
+      return yield* handleLocalPluginRequest(request, url.value);
+    }
+
     const config = yield* ServerConfig.ServerConfig;
     if (config.devUrl && isDevProxiedPath(url.value.pathname)) {
       return HttpServerResponse.text("Not Found", { status: 404 });
@@ -852,8 +861,11 @@ const handleStaticAndDevRequest = Effect.fn("handleStaticAndDevRequest")(
   }),
 );
 
-export const layerStaticAndDevRoute = Layer.unwrap(
-  loadImmutableBuildAssets.pipe(
-    Effect.map((assets) => HttpRouter.add("GET", "*", handleStaticAndDevRequest(assets))),
+export const layerStaticAndDevRoute = Layer.merge(
+  Layer.unwrap(
+    loadImmutableBuildAssets.pipe(
+      Effect.map((assets) => HttpRouter.add("GET", "*", handleStaticAndDevRequest(assets))),
+    ),
   ),
+  layerLocalPluginPostRoute,
 );

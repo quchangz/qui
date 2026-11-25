@@ -515,6 +515,7 @@ export const layer: Layer.Layer<ProjectionMaintenanceV2, never, SqlClient.SqlCli
 
     const purgeDeletedThread: ProjectionMaintenanceV2Shape["purgeDeletedThread"] = (threadId) =>
       purgeThreads(threadId, Effect.void).pipe(
+        Effect.tap((purged) => (purged > 0 ? sql`PRAGMA wal_checkpoint(TRUNCATE)` : Effect.void)),
         Effect.withSpan("ProjectionMaintenance.purgeDeletedThread"),
         Effect.mapError(
           (cause) => new ProjectionMaintenanceError({ operation: "purge deleted thread", cause }),

@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "plugins": [
+    {
+      "id": "sidebar-enhancer",
+      "name": "侧边栏增强（拖拽排序 / 分组折叠 / 颜色标记 / 快捷过滤）",
+      "version": "1.0.0",
+      "enabled": true,
+      "styles": ["sidebar-enhancer/plugin.css"],
+      "scripts": ["sidebar-enhancer/plugin.js"]
+    },
+    {
+      "id": "usage-hud",
+      "name": "用量与会话详情增强（订阅额度 / 上下文 / 测速延迟 / 悬浮统计）",
+      "version": "1.0.0",
+      "enabled": true,
+      "styles": ["usage-hud/plugin.css"],
+      "scripts": ["usage-hud/plugin.js"]
+    }
+  ]
+}

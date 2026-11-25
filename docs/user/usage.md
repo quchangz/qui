@@ -117,6 +117,9 @@ setting removes it from `settings.json`.
 
 ## Track subscription limits
 
+For Antigravity subscription quotas, run [`/usage`](https://antigravity.google/docs/cli/commands/usage)
+in the official Antigravity CLI with the Google account you want to check.
+
 **Usage → Limits** pools every subscription account it can see per provider, so with several Codex
 or Claude accounts across your enabled environments and hubs you read one number per window rather than a
 list. Each window card shows how much of the pool is left and a bar with one segment per account,
@@ -183,9 +186,8 @@ using a proxy through `ANTHROPIC_AUTH_TOKEN`.
 To see pooled accounts, open **Settings → Providers → Usage providers → Add hub**. Choose the
 environment that will connect to the hub and enter its URL and management key.
 
-The hub's Codex, Claude, xAI (shown as Grok) and Antigravity accounts appear under **Usage → Limits**;
-accounts for other providers are not read. Codex accounts show banked reset credits; select an
-account and choose **Use reset** to redeem one. No hub plugin is required.
+The hub's Codex, Claude, and xAI (shown as Grok) accounts appear under **Usage → Limits**.
+To redeem a Codex reset credit, select an account and choose **Use reset**. No hub plugin is required.
 
 This connection supplies usage information; configure
 the provider separately to send agent requests through the hub. A thread uses the hub's limits and

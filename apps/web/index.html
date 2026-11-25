@@ -690,13 +690,13 @@
       if (desktopDisplayName) document.title = desktopDisplayName;
     </script>
     <!-- vite.config.ts stamps the web build's channel into this title. -->
-    <title>T3 Code</title>
+    <title>QUI</title>
   </head>
   <body>
     <div id="root">
       <div id="boot-shell">
-        <div id="boot-shell-card" aria-label="T3 Code splash screen">
-          <img id="boot-shell-logo" src="/apple-touch-icon.png" alt="T3 Code" />
+        <div id="boot-shell-card" aria-label="QUI splash screen">
+          <img id="boot-shell-logo" src="/apple-touch-icon.png" alt="QUI" />
           <p id="boot-shell-progress" role="status" aria-live="polite"></p>
         </div>
       </div>
@@ -721,5 +721,74 @@
       }
     </script>
     <script type="module" src="/src/bootstrap.ts"></script>
+    <!-- t3-plugins-loader -->
+    <script>
+      (() => {
+        if (!window.desktopBridge || window.__T3_PLUGINS_BOOTSTRAP__) return;
+        window.__T3_PLUGINS_BOOTSTRAP__ = true;
+
+        function resolveApiBase() {
+          try {
+            if (
+              window.location &&
+              (window.location.protocol === "http:" || window.location.protocol === "https:")
+            ) {
+              return "";
+            }
+            const bridge = window.desktopBridge;
+            if (bridge && typeof bridge.getLocalEnvironmentBootstraps === "function") {
+              const list = bridge.getLocalEnvironmentBootstraps();
+              if (Array.isArray(list) && list.length > 0) {
+                const primary =
+                  list.find(
+                    (b) =>
+                      b && typeof b.httpBaseUrl === "string" && b.httpBaseUrl && !b.runningDistro,
+                  ) || list.find((b) => b && typeof b.httpBaseUrl === "string" && b.httpBaseUrl);
+                if (primary && primary.httpBaseUrl) {
+                  return String(primary.httpBaseUrl).replace(/\/+$/, "");
+                }
+              }
+            }
+          } catch {}
+          return null;
+        }
+
+        async function loadPluginLoader(attempt) {
+          const base = resolveApiBase();
+          window.__T3_PLUGINS_API_BASE__ = base;
+          const url = `${base}/__t3_plugins__/files/loader.js?t=${Date.now()}`;
+          try {
+            if (base === null) throw new Error("QUI local backend is not ready");
+            const res = await fetch(url, { cache: "no-store" });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const code = await res.text();
+            if (!code || /^\s*</.test(code) || !code.includes("T3Plugins")) {
+              throw new Error("Unexpected loader.js response");
+            }
+            window.__T3_PLUGINS_API_BASE__ = base;
+            const s = document.createElement("script");
+            s.dataset.t3pLoader = "1";
+            s.textContent = code + "\n//# sourceURL=t3-plugins/loader.js";
+            (document.head || document.documentElement).appendChild(s);
+          } catch (err) {
+            if (attempt < 24) {
+              const delay = attempt < 8 ? 400 : 1000;
+              setTimeout(() => void loadPluginLoader(attempt + 1), delay);
+            } else {
+              console.warn("[T3Plugins] bootstrap failed:", err);
+            }
+          }
+        }
+
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", () => void loadPluginLoader(0), {
+            once: true,
+          });
+        } else {
+          void loadPluginLoader(0);
+        }
+      })();
+    </script>
+    <!-- /t3-plugins-loader -->
   </body>
 </html>
